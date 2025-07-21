@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 
 export default function Data({ 
   kelas, 
@@ -6,13 +6,33 @@ export default function Data({
   onKelasChange,
   onNamaChange,
   onSekolahChange,
+  onSelectSekolah,
   onTglLahirChange,
   onNisnChange,
   nama,
   sekolah,
   tglLahir,
-  nisn 
+  nisn,
+  sekolahSuggestions,
+  isSekolahFocused
 }) {
+  const sekolahRef = useRef(null);
+  const [isSekolahActive, setIsSekolahActive] = useState(false);
+
+  // Handle click outside untuk menutup dropdown
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (sekolahRef.current && !sekolahRef.current.contains(event.target)) {
+        setIsSekolahActive(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
   return (
     <div className="space-y-4">
       {/* Nama Siswa */}
@@ -43,7 +63,7 @@ export default function Data({
           value={kelas || ''}
           onChange={onKelasChange}
           className={`w-full border rounded px-3 py-2 bg-teal-100 text-gray-900 focus:outline-none focus:ring-2 focus:ring-teal-500 ${
-            errors.kelas ? 'border-red-500' : 'border-gray-300'
+  errors.kelas ? 'border-red-500' : 'border-gray-300'
           }`}
           placeholder="Masukkan kelas (1-12)"
           maxLength="2"
@@ -54,19 +74,37 @@ export default function Data({
       </div>
 
       {/* Asal Sekolah */}
-      <div>
-        <label className="block mb-1 text-white font-medium">
-          Asal Sekolah
-          <span className="text-red-400 ml-1">*</span>
-        </label>
-        <input
-          type="text"
-          required
-          value={sekolah || ''}
-          onChange={onSekolahChange}
-          className="w-full border border-gray-300 rounded px-3 py-2 bg-teal-100 text-gray-900 focus:outline-none focus:ring-2 focus:ring-teal-500"
-          placeholder="Nama sekolah asal"
-        />
+      <div ref={sekolahRef} className="relative">
+                <label className="block mb-1 text-white font-medium">
+                Asal Sekolah<span className="text-red-400 ml-1">*</span>
+                </label>
+                <input
+                type="text"
+                required
+                value={sekolah || ''}
+                onChange={onSekolahChange}
+                onFocus={() => setIsSekolahActive(true)}
+                className="w-full border border-gray-300 rounded px-3 py-2 bg-teal-100 text-gray-900 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                placeholder="Masukkan asal sekolah"
+                />
+                
+                {/* Dropdown Suggestions */}
+                {(isSekolahActive && isSekolahFocused) && (
+                <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto">
+                    {sekolahSuggestions.map((sekolahItem, index) => (
+                    <div
+                        key={index}
+                        className="px-4 py-2 hover:bg-teal-100 cursor-pointer"
+                        onClick={() => {
+                        onSelectSekolah(sekolahItem);
+                        setIsSekolahActive(false);
+                        }}
+                    >
+                        {sekolahItem}
+                    </div>
+                    ))}
+                </div>
+                )}
       </div>
 
       {/* Tanggal Lahir */}

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Data from './Data';
 
 export default function Formulir() {
@@ -10,18 +10,28 @@ export default function Formulir() {
   const [namaArr, setNamaArr] = useState(['']);
   const [tglLahirArr, setTglLahirArr] = useState(['']);
   const [nisnArr, setNisnArr] = useState(['']);
+  const [daftarSekolah, setDaftarSekolah] = useState([]);
+  const [sekolahSuggestions, setSekolahSuggestions] = useState([]);
   
   
   // State untuk data umum
   const [rayon, setRayon] = useState('');
   const [pembimbing, setPembimbing] = useState('');
-  const [nomor, setNomor] = useState('');
   const [waPembimbing, setWaPembimbing] = useState('');
   const [waError, setWaError] = useState('');
   
   // State untuk UI
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [submitStatus, setSubmitStatus] = useState(null);
+
+  // Saat komponen pertama kali dimuat, coba ambil data dari localStorage
+  useEffect(() => {
+    const savedSekolah = localStorage.getItem('daftarSekolah');
+    if (savedSekolah) {
+      setDaftarSekolah(JSON.parse(savedSekolah));
+    }
+  }, []);
+
 
   // Handler untuk nomor WA Pembimbing
   const handleWaChange = (e) => {
@@ -54,12 +64,50 @@ export default function Formulir() {
     setErrorsArr(newErrors);
     setKelasArr(newKelas);
   };
+  
+  const getAllSekolahUsed = () => {
+    const allSekolah = [...daftarSekolah]; // Ambil dari localStorage
+    // Tambahkan sekolah yang sudah diisi di form (termasuk yang belum disimpan ke localStorage)
+    sekolahArr.forEach(sekolah => {
+        if (sekolah && !allSekolah.includes(sekolah)) {
+        allSekolah.push(sekolah);
+        }
+    });
+    return allSekolah;
+    };
 
-  // Handler untuk input lainnya
+  // Handler untuk perubahan input sekolah
   const handleSekolahChange = (idx) => (e) => {
+    const value = e.target.value;
     const newSekolah = [...sekolahArr];
-    newSekolah[idx] = e.target.value;
+    newSekolah[idx] = value;
     setSekolahArr(newSekolah);
+
+    // Generate suggestions dari semua sekolah yang pernah diisi
+    if (value.length > 1) { // Bisa diubah jadi 1 atau 2 karakter minimal
+        const allSekolah = getAllSekolahUsed();
+        const filtered = allSekolah.filter(sekolah => 
+        sekolah.toLowerCase().includes(value.toLowerCase())
+        );
+        setSekolahSuggestions(filtered);
+    } else {
+        setSekolahSuggestions([]);
+    }
+    };
+
+  // Handler ketika sekolah dipilih dari suggestion
+  const handleSelectSekolah = (idx) => (sekolah) => {
+    const newSekolah = [...sekolahArr];
+    newSekolah[idx] = sekolah;
+    setSekolahArr(newSekolah);
+    setSekolahSuggestions([]);
+
+    // Tambahkan ke daftar sekolah jika belum ada
+    if (!daftarSekolah.includes(sekolah)) {
+      const updatedDaftar = [...daftarSekolah, sekolah];
+      setDaftarSekolah(updatedDaftar);
+      localStorage.setItem('daftarSekolah', JSON.stringify(updatedDaftar));
+    }
   };
 
   const handleNamaChange = (idx) => (e) => {
@@ -82,6 +130,7 @@ export default function Formulir() {
 
   // Tambah peserta baru
   const handleTambah = () => {
+    const newList = [...pesertaList, {}];
     setPesertaList([...pesertaList, {}]);
     setErrorsArr([...errorsArr, '']);
     setKelasArr([...kelasArr, '']);
@@ -89,6 +138,8 @@ export default function Formulir() {
     setNamaArr([...namaArr, '']);
     setTglLahirArr([...tglLahirArr, '']);
     setNisnArr([...nisnArr, '']);
+    const allSekolah = getAllSekolahUsed();
+    setSekolahSuggestions(allSekolah);
   };
 
   // Hapus peserta
@@ -270,17 +321,20 @@ export default function Formulir() {
             </div>
             
             <Data
-              kelas={kelasArr[idx]}
-              errors={{ kelas: errorsArr[idx] }}
-              onKelasChange={handleKelasChange(idx)}
-              onNamaChange={handleNamaChange(idx)}
-              onSekolahChange={handleSekolahChange(idx)}
-              onTglLahirChange={handleTglLahirChange(idx)}
-              onNisnChange={handleNisnChange(idx)}
-              nama={namaArr[idx]}
-              sekolah={sekolahArr[idx]}
-              tglLahir={tglLahirArr[idx]}
-              nisn={nisnArr[idx]}
+                kelas={kelasArr[idx]}
+                errors={{ kelas: errorsArr[idx] }}
+                onKelasChange={handleKelasChange(idx)}
+                onNamaChange={handleNamaChange(idx)}
+                onSekolahChange={handleSekolahChange(idx)}
+                onSelectSekolah={handleSelectSekolah(idx)}
+                onTglLahirChange={handleTglLahirChange(idx)}
+                onNisnChange={handleNisnChange(idx)}
+                nama={namaArr[idx]}
+                sekolah={sekolahArr[idx]}
+                tglLahir={tglLahirArr[idx]}
+                nisn={nisnArr[idx]}
+                sekolahSuggestions={sekolahSuggestions}
+                isSekolahFocused={true}
             />
           </div>
         ))}
