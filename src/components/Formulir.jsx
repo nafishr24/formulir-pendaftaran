@@ -1,5 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import Data from './Data';
+import InputRayon from './data/InputRayon';
+import InputPendamping from './data/InputPendamping';
+import TombolKontrol from './data/TombolKontrol';
+import InputNama from './data/InputNama';
+import InputKelas from './data/InputKelas';
+import InputSekolah from './data/InputSekolah';
+import InputTglLahir from './data/InputTglLahir';
+import InputNISN from './data/InputNISN';
+import Modal from './ui/Modal';
 
 export default function Formulir() {
   // State untuk data peserta (array)
@@ -13,7 +21,6 @@ export default function Formulir() {
   const [daftarSekolah, setDaftarSekolah] = useState([]);
   const [sekolahSuggestions, setSekolahSuggestions] = useState([]);
   
-  
   // State untuk data umum
   const [rayon, setRayon] = useState('');
   const [pembimbing, setPembimbing] = useState('');
@@ -23,8 +30,8 @@ export default function Formulir() {
   // State untuk UI
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [submitStatus, setSubmitStatus] = useState(null);
+  const [alertModal, setAlertModal] = useState({ open: false, message: '' });
 
-  // Saat komponen pertama kali dimuat, coba ambil data dari localStorage
   useEffect(() => {
     const savedSekolah = localStorage.getItem('daftarSekolah');
     if (savedSekolah) {
@@ -32,13 +39,10 @@ export default function Formulir() {
     }
   }, []);
 
-
-  // Handler untuk nomor WA Pembimbing
   const handleWaChange = (e) => {
-    const value = e.target.value.replace(/\D/g, ''); // Hanya angka
+    const value = e.target.value.replace(/\D/g, '');
     setWaPembimbing(value);
     
-    // Validasi minimal 10 digit
     if (value && value.length < 10) {
       setWaError('Nomor WA minimal 10 digit');
     } else {
@@ -46,7 +50,6 @@ export default function Formulir() {
     }
   };
 
-  // Handler untuk perubahan input kelas
   const handleKelasChange = (idx) => (e) => {
     const val = e.target.value;
     const newErrors = [...errorsArr];
@@ -66,43 +69,38 @@ export default function Formulir() {
   };
   
   const getAllSekolahUsed = () => {
-    const allSekolah = [...daftarSekolah]; // Ambil dari localStorage
-    // Tambahkan sekolah yang sudah diisi di form (termasuk yang belum disimpan ke localStorage)
+    const allSekolah = [...daftarSekolah];
     sekolahArr.forEach(sekolah => {
-        if (sekolah && !allSekolah.includes(sekolah)) {
+      if (sekolah && !allSekolah.includes(sekolah)) {
         allSekolah.push(sekolah);
-        }
+      }
     });
     return allSekolah;
-    };
+  };
 
-  // Handler untuk perubahan input sekolah
   const handleSekolahChange = (idx) => (e) => {
     const value = e.target.value;
     const newSekolah = [...sekolahArr];
     newSekolah[idx] = value;
     setSekolahArr(newSekolah);
 
-    // Generate suggestions dari semua sekolah yang pernah diisi
-    if (value.length >= 1) { // Bisa diubah jadi 1 atau 2 karakter minimal
-        const allSekolah = getAllSekolahUsed();
-        const filtered = allSekolah.filter(sekolah => 
+    if (value.length >= 1) {
+      const allSekolah = getAllSekolahUsed();
+      const filtered = allSekolah.filter(sekolah => 
         sekolah.toLowerCase().includes(value.toLowerCase())
-        );
-        setSekolahSuggestions(filtered);
+      );
+      setSekolahSuggestions(filtered);
     } else {
-        setSekolahSuggestions([]);
+      setSekolahSuggestions([]);
     }
-    };
+  };
 
-  // Handler ketika sekolah dipilih dari suggestion
   const handleSelectSekolah = (idx) => (sekolah) => {
     const newSekolah = [...sekolahArr];
     newSekolah[idx] = sekolah;
     setSekolahArr(newSekolah);
     setSekolahSuggestions([]);
 
-    // Tambahkan ke daftar sekolah jika belum ada
     if (!daftarSekolah.includes(sekolah)) {
       const updatedDaftar = [...daftarSekolah, sekolah];
       setDaftarSekolah(updatedDaftar);
@@ -128,9 +126,7 @@ export default function Formulir() {
     setNisnArr(newNisn);
   };
 
-  // Tambah peserta baru
   const handleTambah = () => {
-    const newList = [...pesertaList, {}];
     setPesertaList([...pesertaList, {}]);
     setErrorsArr([...errorsArr, '']);
     setKelasArr([...kelasArr, '']);
@@ -142,10 +138,9 @@ export default function Formulir() {
     setSekolahSuggestions(allSekolah);
   };
 
-  // Hapus peserta
   const handleHapus = (idx) => {
     if (pesertaList.length <= 1) {
-      alert('Minimal harus ada 1 peserta');
+      setAlertModal({ open: true, message: 'Minimal harus ada 1 peserta' });
       return;
     }
     
@@ -166,11 +161,9 @@ export default function Formulir() {
     setNisnArr(newNisnArr);
   };
 
-  // Validasi sebelum submit
   const handleSubmit = (e) => {
     e.preventDefault();
     
-    // Validasi data wajib
     const hasError = errorsArr.some((err) => err !== '');
     const hasEmptyKelas = kelasArr.some((k) => k === '');
     const hasEmptyNama = namaArr.some((n) => !n || n.trim() === '');
@@ -181,14 +174,19 @@ export default function Formulir() {
     
     if (hasError || hasEmptyKelas || hasEmptyNama || hasEmptySekolah || 
         hasEmptyRayon || hasEmptyPembimbing || hasWaError) {
-      alert('Periksa kembali data peserta!\nPastikan semua field wajib (*) terisi dengan benar.\nNomor WA harus minimal 10 digit.');
+      setAlertModal({ 
+        open: true, 
+        message: `Periksa kembali data peserta!
+         Pastikan semua field wajib 
+         (*) 
+         terisi dengan benar.`
+      });
       return;
     }
     
     setShowConfirmation(true);
   };
 
-  // Konfirmasi submit - Tambahkan WA ke data yang dikirim
   const handleConfirmSubmit = () => {
     setShowConfirmation(false);
     setSubmitStatus('loading');
@@ -210,7 +208,6 @@ export default function Formulir() {
         
         setSubmitStatus('success');
         setTimeout(() => {
-          // Reset form
           setPesertaList([{}]);
           setErrorsArr(['']);
           setKelasArr(['']);
@@ -243,70 +240,14 @@ export default function Formulir() {
 
         {/* Data Umum */}
         <div className="space-y-4 mb-8 p-4 bg-teal-700 rounded-lg">
-          <div>
-            <label className="block mb-2 text-white font-medium">
-              Rayon<span className="text-red-400 ml-1">*</span>
-            </label>
-            <select
-              required
-              value={rayon}
-              onChange={(e) => setRayon(e.target.value)}
-              className="w-full border border-gray-300 rounded px-3 py-2 bg-teal-100 text-gray-900 focus:outline-none focus:ring-2 focus:ring-teal-500"
-            >
-              {rayon === '' && (
-                <option 
-                  value="" 
-                  disabled 
-                  hidden
-                  className="text-gray-400 italic"
-                >
-                  Pilih Rayon
-                </option>
-              )}
-              
-              <option value="Rayon 1 (Universitas Madura)">Rayon 1 (Universitas Madura)</option>
-              <option value="Rayon 2 (SMKN 2 Sampang)">Rayon 2 (SMKN 2 Sampang)</option>
-              <option value="Rayon 3 (SMAN 1 Sumenep)">Rayon 3 (SMAN 1 Sumenep)</option>
-              <option value="Rayon 4 (SMAN 1 Bangkalan)">Rayon 4 (SMAN 1 Bangkalan)</option>
-            </select>
-          </div>
-          
-          <div>
-            <label className="block mb-2 text-white font-medium">
-              Nama Pembimbing<span className="text-red-400 ml-1">*</span>
-            </label>
-            <input
-              type="text"
-              required
-              value={pembimbing}
-              onChange={(e) => setPembimbing(e.target.value)}
-              className="w-full border border-gray-300 rounded px-3 py-2 bg-teal-100 text-gray-900 focus:outline-none focus:ring-2 focus:ring-teal-500"
-              placeholder="Nama lengkap pembimbing"
-            />
-          </div>
-
-          {/* Tambahan Field Nomor WA Pembimbing */}
-          <div>
-            <label className="block mb-2 text-white font-medium">
-              Nomor WA Pembimbing<span className="text-red-400 ml-1">*</span>
-            </label>
-            <div className="flex items-center">
-              <span className="bg-gray-200 text-gray-700 px-3 py-2 rounded-l border border-r-0 border-gray-300">+62</span>
-              <input
-                type="tel"
-                required
-                value={waPembimbing}
-                onChange={handleWaChange}
-                className="flex-1 border border-gray-300 rounded-r px-3 py-2 bg-teal-100 text-gray-900 focus:outline-none focus:ring-2 focus:ring-teal-500"
-                placeholder="81234567890"
-                maxLength="15"
-              />
-            </div>
-            {waError && (
-              <p className="mt-1 text-red-200 text-sm">{waError}</p>
-            )}
-            <p className="text-xs text-gray-200 mt-1">Contoh: 81234567890 (tanpa +62)</p>
-          </div>
+          <InputRayon value={rayon} onChange={(e) => setRayon(e.target.value)} />
+          <InputPendamping 
+            nama={pembimbing} 
+            onNamaChange={(e) => setPembimbing(e.target.value)}
+            wa={waPembimbing}
+            onWaChange={handleWaChange}
+            waError={waError}
+          />
         </div>
         
         {/* Data Peserta */}
@@ -331,69 +272,74 @@ export default function Formulir() {
               )}
             </div>
             
-            <Data
-                kelas={kelasArr[idx]}
-                errors={{ kelas: errorsArr[idx] }}
-                onKelasChange={handleKelasChange(idx)}
-                onNamaChange={handleNamaChange(idx)}
-                onSekolahChange={handleSekolahChange(idx)}
-                onSelectSekolah={handleSelectSekolah(idx)}
-                onTglLahirChange={handleTglLahirChange(idx)}
-                onNisnChange={handleNisnChange(idx)}
-                nama={namaArr[idx]}
-                sekolah={sekolahArr[idx]}
-                tglLahir={tglLahirArr[idx]}
-                nisn={nisnArr[idx]}
-                sekolahSuggestions={sekolahSuggestions}
-                isSekolahFocused={true}
-            />
+            <div className="space-y-4">
+              <InputNama value={namaArr[idx]} onChange={handleNamaChange(idx)} />
+              <InputKelas 
+                value={kelasArr[idx]} 
+                error={errorsArr[idx]} 
+                onChange={handleKelasChange(idx)} 
+              />
+              <InputSekolah
+                value={sekolahArr[idx]}
+                onChange={handleSekolahChange(idx)}
+                onSelect={handleSelectSekolah(idx)}
+                suggestions={sekolahSuggestions}
+                isFocused={true}
+              />
+              <InputTglLahir value={tglLahirArr[idx]} onChange={handleTglLahirChange(idx)} />
+              <InputNISN value={nisnArr[idx]} onChange={handleNisnChange(idx)} />
+            </div>
           </div>
         ))}
 
-        {/* Tombol Aksi */}
-        <div className="mt-8 flex flex-col sm:flex-row gap-4">
-          <button
-            type="button"
-            onClick={handleTambah}
-            className="flex-1 bg-teal-800 text-white font-semibold py-3 rounded-lg hover:bg-teal-900 
-                      active:bg-teal-950 transition-colors shadow-md"
-          >
-            + Tambah Peserta
-          </button>
-          <button
-            type="submit"
-            className="flex-1 bg-amber-500 text-gray-900 font-semibold py-3 rounded-lg hover:bg-amber-600 
-                      active:bg-amber-700 transition-colors shadow-md"
-          >
-            Daftarkan Peserta
-          </button>
-        </div>
+        <TombolKontrol onTambah={handleTambah} />
       </form>
 
+      <Modal
+        isOpen={alertModal.open}
+        onClose={() => setAlertModal({ ...alertModal, open: false })}
+        title="Pemberitahuan"
+        actions={[
+          <button
+            key="ok"
+            onClick={() => setAlertModal({ ...alertModal, open: false })}
+            className="px-4 py-2 bg-teal-600 text-white rounded hover:bg-teal-700"
+          >
+            OK
+          </button>,
+        ]}
+      >
+        <div className="text-gray-700 whitespace-pre-line">
+          Periksa kembali data peserta!
+          {'\n'}Pastikan semua field wajib (<span className="text-red-500">*</span>) terisi dengan benar.
+        </div>
+      </Modal>
+
+
       {/* Popup Konfirmasi */}
-        {showConfirmation && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white p-6 rounded-lg max-w-2xl w-full shadow-xl">
-              <h2 className="text-xl font-bold mb-4 text-teal-600 border-b pb-2">
-                Konfirmasi Pendaftaran
-              </h2>
-              
-              <div className="mb-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                  <div>
-                    <h3 className="font-semibold text-gray-700">Rayon:</h3>
-                    <p className="text-gray-900">{rayon}</p>
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-gray-700">Pembimbing:</h3>
-                    <p className="text-gray-900">{pembimbing}</p>
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-gray-700">Nomor WA:</h3>
-                    <p className="text-gray-900">+62{waPembimbing}</p>
-                  </div>
+      {showConfirmation && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white p-6 rounded-lg max-w-2xl w-full shadow-xl">
+            <h2 className="text-xl font-bold mb-4 text-teal-600 border-b pb-2">
+              Konfirmasi Pendaftaran
+            </h2>
+            
+            <div className="mb-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <div>
+                  <h3 className="font-semibold text-gray-700">Rayon:</h3>
+                  <p className="text-gray-900">{rayon}</p>
                 </div>
-              
+                <div>
+                  <h3 className="font-semibold text-gray-700">Pembimbing:</h3>
+                  <p className="text-gray-900">{pembimbing}</p>
+                </div>
+                <div>
+                  <h3 className="font-semibold text-gray-700">Nomor WA:</h3>
+                  <p className="text-gray-900">+62{waPembimbing}</p>
+                </div>
+              </div>
+            
               <h3 className="font-semibold text-gray-700 mb-2">Data Peserta:</h3>
               <div className="space-y-4 max-h-96 overflow-y-auto pr-2">
                 {pesertaList.map((_, idx) => (
