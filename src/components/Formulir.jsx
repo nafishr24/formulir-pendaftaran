@@ -175,11 +175,7 @@ export default function Formulir() {
     if (hasError || hasEmptyKelas || hasEmptyNama || hasEmptySekolah || 
         hasEmptyRayon || hasEmptyPembimbing || hasWaError) {
       setAlertModal({ 
-        open: true, 
-        message: `Periksa kembali data peserta!
-         Pastikan semua field wajib 
-         (*) 
-         terisi dengan benar.`
+        open: true
       });
       return;
     }
@@ -298,7 +294,7 @@ export default function Formulir() {
       <Modal
         isOpen={alertModal.open}
         onClose={() => setAlertModal({ ...alertModal, open: false })}
-        title="Pemberitahuan"
+        title="Pemberitahuan!"
         actions={[
           <button
             key="ok"
@@ -311,7 +307,7 @@ export default function Formulir() {
       >
         <div className="text-gray-700 whitespace-pre-line">
           Periksa kembali data peserta!
-          {'\n'}Pastikan semua field wajib (<span className="text-red-500">*</span>) terisi dengan benar.
+          {'\n'}Pastikan semua field wajib (<span className="text-red-500">*</span>) terisi dengan benar dan tidak boleh kosong.
         </div>
       </Modal>
 
