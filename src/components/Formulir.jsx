@@ -84,7 +84,7 @@ export default function Formulir() {
     setSekolahArr(newSekolah);
 
     // Generate suggestions dari semua sekolah yang pernah diisi
-    if (value.length > 1) { // Bisa diubah jadi 1 atau 2 karakter minimal
+    if (value.length >= 1) { // Bisa diubah jadi 1 atau 2 karakter minimal
         const allSekolah = getAllSekolahUsed();
         const filtered = allSekolah.filter(sekolah => 
         sekolah.toLowerCase().includes(value.toLowerCase())
@@ -253,10 +253,21 @@ export default function Formulir() {
               onChange={(e) => setRayon(e.target.value)}
               className="w-full border border-gray-300 rounded px-3 py-2 bg-teal-100 text-gray-900 focus:outline-none focus:ring-2 focus:ring-teal-500"
             >
-              <option value="">Pilih Rayon</option>
-              <option value="Rayon 1 (Jakarta Pusat)">Rayon 1 - Jakarta Pusat</option>
-              <option value="Rayon 2 (Jakarta Barat)">Rayon 2 - Jakarta Barat</option>
-              <option value="Rayon 3 (Jakarta Timur)">Rayon 3 - Jakarta Timur</option>
+              {rayon === '' && (
+                <option 
+                  value="" 
+                  disabled 
+                  hidden
+                  className="text-gray-400 italic"
+                >
+                  Pilih Rayon
+                </option>
+              )}
+              
+              <option value="Rayon 1 (Universitas Madura)">Rayon 1 (Universitas Madura)</option>
+              <option value="Rayon 2 (SMKN 2 Sampang)">Rayon 2 (SMKN 2 Sampang)</option>
+              <option value="Rayon 3 (SMAN 1 Sumenep)">Rayon 3 (SMAN 1 Sumenep)</option>
+              <option value="Rayon 4 (SMAN 1 Bangkalan)">Rayon 4 (SMAN 1 Bangkalan)</option>
             </select>
           </div>
           
