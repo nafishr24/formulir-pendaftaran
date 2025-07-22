@@ -8,6 +8,7 @@ import InputSekolah from './data/InputSekolah';
 import InputTglLahir from './data/InputTglLahir';
 import InputNISN from './data/InputNISN';
 import Modal from './ui/Modal';
+import { Transition } from '@headlessui/react';
 
 export default function Formulir() {
   // State untuk data peserta (array)
@@ -313,7 +314,17 @@ export default function Formulir() {
 
 
       {/* Popup Konfirmasi */}
-      {showConfirmation && (
+      
+      <Transition
+        show={showConfirmation}
+        enter="transition ease-out duration-300"
+        enterFrom="opacity-0 scale-95"
+        enterTo="opacity-100 scale-100"
+        leave="transition ease-in duration-200"
+        leaveFrom="opacity-100 scale-100"
+        leaveTo="opacity-0 scale-95"
+      >
+      
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white p-6 rounded-lg max-w-2xl w-full shadow-xl">
             <h2 className="text-xl font-bold mb-4 text-teal-600 border-b pb-2">
@@ -392,7 +403,9 @@ export default function Formulir() {
             </div>
           </div>
         </div>
-      )}
+
+      </Transition>
+      
 
       {/* Notifikasi Status */}
       {submitStatus && (
