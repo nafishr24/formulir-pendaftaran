@@ -3,6 +3,8 @@ import InputRayon from './data/InputRayon';
 import InputPendamping from './data/InputPendamping';
 import TombolKontrol from './data/TombolKontrol';
 import InputNama from './data/InputNama';
+import InputJenjang from './data/InputJenjang';
+import InputLevelSD from './data/InputLevelSD';
 import InputKelas from './data/InputKelas';
 import InputSekolah from './data/InputSekolah';
 import InputTglLahir from './data/InputTglLahir';
@@ -15,6 +17,8 @@ export default function Formulir() {
   const [pesertaList, setPesertaList] = useState([{}]);
   const [errorsArr, setErrorsArr] = useState(['']);
   const [kelasArr, setKelasArr] = useState(['']);
+  const [jenjangArr, setJenjangArr] = useState(['']);
+  const [levelSDArr, setLevelSDArr] = useState(['']);
   const [sekolahArr, setSekolahArr] = useState(['']);
   const [namaArr, setNamaArr] = useState(['']);
   const [tglLahirArr, setTglLahirArr] = useState(['']);
@@ -51,24 +55,113 @@ export default function Formulir() {
     }
   };
 
+  // Handler untuk perubahan jenjang
+  const handleJenjangChange = (idx) => (e) => {
+    const newJenjang = [...jenjangArr];
+    newJenjang[idx] = e.target.value;
+    setJenjangArr(newJenjang);
+    
+    // Reset level SD dan kelas ketika jenjang berubah
+    const newLevelSD = [...levelSDArr];
+    newLevelSD[idx] = '';
+    setLevelSDArr(newLevelSD);
+    
+    const newKelas = [...kelasArr];
+    newKelas[idx] = '';
+    setKelasArr(newKelas);
+    
+    const newErrors = [...errorsArr];
+    newErrors[idx] = '';
+    setErrorsArr(newErrors);
+  };
+
+  // Handler untuk perubahan level SD
+  const handleLevelSDChange = (idx) => (e) => {
+    const newLevelSD = [...levelSDArr];
+    newLevelSD[idx] = e.target.value;
+    setLevelSDArr(newLevelSD);
+  };
+
+  // Modifikasi handler kelas untuk validasi berdasarkan jenjang
+  
   const handleKelasChange = (idx) => (e) => {
     const val = e.target.value;
     const newErrors = [...errorsArr];
     const newKelas = [...kelasArr];
-    
-    if (val !== '' && !/^\d+$/.test(val)) {
-      newErrors[idx] = 'Harap masukkan angka antara 1-12';
-    } else if (val !== '' && (parseInt(val) < 1 || parseInt(val) > 12)) {
-      newErrors[idx] = 'Kelas harus antara 1-12';
-    } else {
-      newErrors[idx] = '';
-      newKelas[idx] = val;
+    const jenjang = jenjangArr[idx];
+    const level = levelSDArr[idx];
+
+    let allowed = [];
+
+    // 🎯 Tentukan allowed values per jenjang
+    if (jenjang === 'SD') {
+      if (level.includes("Level 1")) allowed = ['1', '2'];
+      else if (level.includes("Level 2")) allowed = ['3', '4'];
+      else if (level.includes("Level 3")) allowed = ['5', '6'];
+    } else if (jenjang === 'SMP') {
+      allowed = ['7', '8', '9'];
+    } else if (jenjang === 'SMA') {
+      allowed = ['10', '11', '12'];
     }
-    
+
+    // 🔒 Batasi input (user tidak bisa ngetik angka aneh)
+    if (allowed.length > 0) {
+      if (allowed.some(k => k.startsWith(val))) {
+        newKelas[idx] = val;
+      } else if (val === '') {
+        newKelas[idx] = '';
+      } else {
+        return; // blok input salah
+      }
+    } else {
+      if (/^\d*$/.test(val)) {
+        newKelas[idx] = val;
+      } else {
+        return;
+      }
+    }
+
+    // ✅ Validasi error message (manual per jenjang & level)
+    if (newKelas[idx] === '') {
+      newErrors[idx] = `Kelas wajib diisi untuk jenjang ${jenjang}`;
+    } else {
+      if (jenjang === 'SD') {
+        if (level.includes("Level 1") && !['1', '2'].includes(newKelas[idx])) {
+          newErrors[idx] = "Hanya boleh kelas 1 atau kelas 2";
+        } else if (level.includes("Level 2") && !['3', '4'].includes(newKelas[idx])) {
+          newErrors[idx] = "Hanya boleh kelas 3 atau kelas 4";
+        } else if (level.includes("Level 3") && !['5', '6'].includes(newKelas[idx])) {
+          newErrors[idx] = "Hanya boleh kelas 5 atau kelas 6";
+        } else {
+          newErrors[idx] = '';
+        }
+      } else if (jenjang === 'SMP') {
+        if (!['7', '8', '9'].includes(newKelas[idx])) {
+          newErrors[idx] = "Hanya boleh kelas 7, 8, atau 9";
+        } else {
+          newErrors[idx] = '';
+        }
+      } else if (jenjang === 'SMA') {
+        if (!['10', '11', '12'].includes(newKelas[idx])) {
+          newErrors[idx] = "Hanya boleh kelas 10, 11, atau 12";
+        } else {
+          newErrors[idx] = '';
+        }
+      } else {
+        newErrors[idx] = '';
+      }
+    }
+
+
     setErrorsArr(newErrors);
     setKelasArr(newKelas);
   };
-  
+
+
+
+
+
+
   const getAllSekolahUsed = () => {
     const allSekolah = [...daftarSekolah];
     sekolahArr.forEach(sekolah => {
@@ -131,6 +224,8 @@ export default function Formulir() {
     setPesertaList([...pesertaList, {}]);
     setErrorsArr([...errorsArr, '']);
     setKelasArr([...kelasArr, '']);
+    setJenjangArr([...jenjangArr, '']);
+    setLevelSDArr([...levelSDArr, '']);
     setSekolahArr([...sekolahArr, '']);
     setNamaArr([...namaArr, '']);
     setTglLahirArr([...tglLahirArr, '']);
@@ -148,6 +243,8 @@ export default function Formulir() {
     const newPesertaList = pesertaList.filter((_, i) => i !== idx);
     const newErrorsArr = errorsArr.filter((_, i) => i !== idx);
     const newKelasArr = kelasArr.filter((_, i) => i !== idx);
+    const newJenjangArr = jenjangArr.filter((_, i) => i !== idx);
+    const newLevelSDArr = levelSDArr.filter((_, i) => i !== idx);
     const newSekolahArr = sekolahArr.filter((_, i) => i !== idx);
     const newNamaArr = namaArr.filter((_, i) => i !== idx);
     const newTglLahirArr = tglLahirArr.filter((_, i) => i !== idx);
@@ -156,6 +253,8 @@ export default function Formulir() {
     setPesertaList(newPesertaList);
     setErrorsArr(newErrorsArr);
     setKelasArr(newKelasArr);
+    setJenjangArr(newJenjangArr);
+    setLevelSDArr(newLevelSDArr);
     setSekolahArr(newSekolahArr);
     setNamaArr(newNamaArr);
     setTglLahirArr(newTglLahirArr);
@@ -166,17 +265,23 @@ export default function Formulir() {
     e.preventDefault();
     
     const hasError = errorsArr.some((err) => err !== '');
-    const hasEmptyKelas = kelasArr.some((k) => k === '');
+    const hasEmptyJenjang = jenjangArr.some((j) => !j);
+    const hasEmptyKelas = kelasArr.some((k, idx) => !k); 
+    const hasEmptyLevelSD = levelSDArr.some((l, idx) => 
+      jenjangArr[idx] === 'SD' && !l
+    );
     const hasEmptyNama = namaArr.some((n) => !n || n.trim() === '');
     const hasEmptySekolah = sekolahArr.some((s) => !s || s.trim() === '');
     const hasEmptyRayon = !rayon;
     const hasEmptyPembimbing = !pembimbing || pembimbing.trim() === '';
     const hasWaError = !waPembimbing || waPembimbing.length < 10;
     
-    if (hasError || hasEmptyKelas || hasEmptyNama || hasEmptySekolah || 
-        hasEmptyRayon || hasEmptyPembimbing || hasWaError) {
+    if (hasError || hasEmptyJenjang || hasEmptyKelas || hasEmptyLevelSD || 
+        hasEmptyNama || hasEmptySekolah || hasEmptyRayon || 
+        hasEmptyPembimbing || hasWaError) {
       setAlertModal({ 
-        open: true
+        open: true,
+        message: 'Periksa kembali data peserta!\nPastikan semua field wajib (*) terisi dengan benar dan tidak boleh kosong.'
       });
       return;
     }
@@ -196,6 +301,8 @@ export default function Formulir() {
           wa_pembimbing: waPembimbing,
           peserta: pesertaList.map((_, idx) => ({
             nama: namaArr[idx],
+            jenjang: jenjangArr[idx],
+            levelSD: levelSDArr[idx],
             kelas: kelasArr[idx],
             sekolah: sekolahArr[idx],
             tglLahir: tglLahirArr[idx],
@@ -208,6 +315,8 @@ export default function Formulir() {
           setPesertaList([{}]);
           setErrorsArr(['']);
           setKelasArr(['']);
+          setJenjangArr(['']);
+          setLevelSDArr(['']);
           setSekolahArr(['']);
           setNamaArr(['']);
           setTglLahirArr(['']);
@@ -271,11 +380,23 @@ export default function Formulir() {
             
             <div className="space-y-4">
               <InputNama value={namaArr[idx]} onChange={handleNamaChange(idx)} />
+              <InputJenjang value={jenjangArr[idx]} onChange={handleJenjangChange(idx)} />
+              
+              {/* Tampilkan level SD hanya jika jenjang SD dipilih */}
+              {jenjangArr[idx] === 'SD' && (
+                <InputLevelSD value={levelSDArr[idx]} onChange={handleLevelSDChange(idx)} />
+              )}
+              
+              {/* Tampilkan input kelas hanya jika jenjang bukan SD */}
               <InputKelas 
                 value={kelasArr[idx]} 
                 error={errorsArr[idx]} 
-                onChange={handleKelasChange(idx)} 
+                onChange={handleKelasChange(idx)}
+                jenjang={jenjangArr[idx]}
+                levelSD={levelSDArr[idx]}
               />
+
+              
               <InputSekolah
                 value={sekolahArr[idx]}
                 onChange={handleSekolahChange(idx)}
@@ -289,9 +410,10 @@ export default function Formulir() {
           </div>
         ))}
 
-        <TombolKontrol onTambah={handleTambah} />
+        <TombolKontrol onTambah={handleTambah} onSubmit={handleSubmit} />
       </form>
 
+      {/* Modal Alert */}
       <Modal
         isOpen={alertModal.open}
         onClose={() => setAlertModal({ ...alertModal, open: false })}
@@ -307,14 +429,11 @@ export default function Formulir() {
         ]}
       >
         <div className="text-gray-700 whitespace-pre-line">
-          Periksa kembali data peserta!
-          {'\n'}Pastikan semua field wajib (<span className="text-red-500">*</span>) terisi dengan benar dan tidak boleh kosong.
+          {alertModal.message}
         </div>
       </Modal>
 
-
       {/* Popup Konfirmasi */}
-      
       <Transition
         show={showConfirmation}
         enter="transition ease-out duration-300"
@@ -324,7 +443,6 @@ export default function Formulir() {
         leaveFrom="opacity-100 scale-100"
         leaveTo="opacity-0 scale-95"
       >
-      
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white p-6 rounded-lg max-w-2xl w-full shadow-xl">
             <h2 className="text-xl font-bold mb-4 text-teal-600 border-b pb-2">
@@ -358,9 +476,21 @@ export default function Formulir() {
                         <p>{namaArr[idx]}</p>
                       </div>
                       <div>
-                        <span className="text-sm text-gray-500">Kelas:</span>
-                        <p>{kelasArr[idx]}</p>
+                        <span className="text-sm text-gray-500">Jenjang:</span>
+                        <p>{jenjangArr[idx]}</p>
                       </div>
+                      {jenjangArr[idx] === 'SD' && (
+                        <div>
+                          <span className="text-sm text-gray-500">Level SD:</span>
+                          <p>{levelSDArr[idx]}</p>
+                        </div>
+                      )}
+                      {jenjangArr[idx] !== 'SD' && (
+                        <div>
+                          <span className="text-sm text-gray-500">Kelas:</span>
+                          <p>{kelasArr[idx]}</p>
+                        </div>
+                      )}
                       <div>
                         <span className="text-sm text-gray-500">Asal Sekolah:</span>
                         <p>{sekolahArr[idx]}</p>
@@ -403,9 +533,7 @@ export default function Formulir() {
             </div>
           </div>
         </div>
-
       </Transition>
-      
 
       {/* Notifikasi Status */}
       {submitStatus && (
