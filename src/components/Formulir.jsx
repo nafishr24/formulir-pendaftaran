@@ -449,6 +449,7 @@ export default function Formulir() {
               Konfirmasi Pendaftaran
             </h2>
             
+            {/* Kolom untuk data-data peserta */}
             <div className="mb-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                 <div>
